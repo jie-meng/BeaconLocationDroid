@@ -12,6 +12,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.jmengxy.beacon.BeaconCache;
 import com.jmengxy.beacon.BeaconSensor;
 import com.jmengxy.beacon.models.Beacon;
 
@@ -34,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
 
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
     private BeaconSensor beaconSensor = null;
+    private BeaconCache beaconCache = null;
+    private final int BEACON_CACHE_TIMES = 6;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         compositeDisposable.clear();
+        beaconCache.clear();
         beaconSensor.unbind();
     }
 
@@ -73,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void init() {
         beaconSensor = new BeaconSensor(this);
+        beaconCache = new BeaconCache(BEACON_CACHE_TIMES);
         checkBluetoothPermission();
     }
 
@@ -104,13 +109,12 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onNext(List<Beacon> beacons) {
-                        if (beacons.isEmpty()) {
-                            Log.i(TAG, "No beacons found!");
-                        } else {
-                            for (Beacon beacon :
-                                    beacons) {
-                                Log.i(TAG, String.format("address:%s major=%s minor=%s distance=%f", beacon.getAddress(), beacon.getMajor(), beacon.getMinor(), beacon.getDistance()));
-                            }
+                        beaconCache.update(beacons);
+
+                        Log.i(TAG, "Found beacons:");
+                        for (Beacon beacon :
+                                beaconCache.getBeacons()) {
+                            Log.i(TAG, String.format("address:%s major=%s minor=%s distance=%f", beacon.getAddress(), beacon.getMajor(), beacon.getMinor(), beacon.getDistance()));
                         }
                     }
 

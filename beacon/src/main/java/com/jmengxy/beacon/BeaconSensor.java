@@ -112,7 +112,7 @@ public class BeaconSensor {
                 rangeNotifySubjects.remove(region);
             });
         } else {
-            return Observable.error(new Exception(String.format("Ranging of regionId:(%s) already started", regionId)));
+            return listPublishSubject;
         }
     }
 
