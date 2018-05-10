@@ -1,1 +1,1 @@
-include ':app', ':beacon'
+include ':app', ':beacon', ':location'

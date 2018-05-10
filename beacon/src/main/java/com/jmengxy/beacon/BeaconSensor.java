@@ -73,8 +73,9 @@ public class BeaconSensor {
                 b.setAddress(beacon.getBluetoothAddress());
                 b.setUuid(beacon.getId1().toString());
                 b.setMajor(beacon.getId2().toString());
-                b.setUuid(beacon.getId1().toString());
+                b.setMinor(beacon.getId3().toString());
                 b.setDistance(beacon.getDistance());
+                b.setRssi(beacon.getRssi());
 
                 list.add(b);
             }
@@ -84,8 +85,10 @@ public class BeaconSensor {
         }
     };
 
-    public void bind(@NonNull String beaconLayout) {
-        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(beaconLayout));
+    public void bind(@NonNull List<String> beaconLayouts) {
+        for (String beaconLayout : beaconLayouts) {
+            beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(beaconLayout));
+        }
         beaconManager.bind(beaconConsumer);
     }
 

@@ -19,6 +19,9 @@ public class Beacon {
     @SerializedName("distance")
     private double distance;
 
+    @SerializedName("rssi")
+    private int rssi;
+
     public Beacon() {
     }
 
@@ -60,5 +63,13 @@ public class Beacon {
 
     public void setDistance(double distance) {
         this.distance = distance;
+    }
+
+    public int getRssi() {
+        return rssi;
+    }
+
+    public void setRssi(int rssi) {
+        this.rssi = rssi;
     }
 }

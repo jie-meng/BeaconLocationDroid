@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class BeaconCache {
 
-    private int cacheTimes = 5;
+    private int cacheTimes;
 
     private Map<String, BeaconCount> beaconCacheMap = new HashMap<>();
 
