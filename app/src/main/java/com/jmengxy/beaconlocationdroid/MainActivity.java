@@ -12,17 +12,23 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jmengxy.beacon.BeaconCache;
 import com.jmengxy.beacon.BeaconSensor;
 import com.jmengxy.beacon.models.Beacon;
+import com.jmengxy.beaconlocationdroid.models.BeaconLocation;
+import com.jmengxy.beaconlocationdroid.models.BeaconsInfo;
 import com.jmengxy.location.Locator;
-import com.jmengxy.location.algorithms.Centroid;
+import com.jmengxy.location.algorithms.RSSIToDistance;
+import com.jmengxy.location.algorithms.Trilateral;
 import com.jmengxy.location.models.Base;
 import com.jmengxy.location.models.Location;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,10 +49,12 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.beacons)
     TextView tvBeacons;
 
+    private BeaconsInfo beaconsInfo;
+
     private static final String TAG = "MainActivity";
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 100;
-    private static final String BEACON_UUID = "E4B8ADE5-BBBA-E4B8-89E5-B18000000000";
-    private static final int BEACON_CACHE_TIMES = 6;
+    private static final String BEACON_UUID = "E4B8ADE5-BBBA-E4B8-89E5-B18000000001";
+    private static final int BEACON_CACHE_TIMES = 5;
 
     private Map<String, Location> beaconLocations = new HashMap<>();
 
@@ -56,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
     private BeaconSensor beaconSensor = null;
     private BeaconCache beaconCache = null;
-    private Locator locator = new Centroid();
+    private Locator locator = new Trilateral();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -97,29 +105,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
-        beaconSensor = new BeaconSensor(this);
-        beaconCache = new BeaconCache(BEACON_CACHE_TIMES);
-
-        initBeaconLocations();
-
-        checkBluetoothPermission();
+        checkPermissions();
     }
 
     private void initBeaconLocations() {
-        beaconLocations.put("19:18:FC:06:A1:B5", new Location(0, 0));
-        beaconLocations.put("19:18:FC:06:4F:E6", new Location(0, 3));
-        beaconLocations.put("19:18:FC:06:A3:CF", new Location(3, 0));
-        beaconLocations.put("50:65:83:8F:D8:4C", new Location(3, 3));
-
-        beaconLocations.put("50:65:83:8A:D7:90", new Location(1.5, 1.5));
+        for (BeaconLocation beaconLocation : beaconsInfo.getBeaconLocations()) {
+            beaconLocations.put(
+                    beaconLocation.getAddress(),
+                    new Location(beaconLocation.getX() * beaconsInfo.getWeight(), beaconLocation.getY() * beaconsInfo.getWeight()));
+        }
     }
 
-    private void checkBluetoothPermission() {
+    private void checkPermissions() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.READ_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
             } else {
                 initBluetooth();
@@ -130,7 +132,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initBluetooth() {
-        beaconSensor.bind(Arrays.asList(MainActivity.IBEACON_LAYOUT));
+        if (!loadBeacons()) {
+            return;
+        }
+
+        initBeaconLocations();
+
+        beaconSensor = new BeaconSensor(this);
+        beaconSensor.bind(Arrays.asList(beaconsInfo.getBeaconLayout()));
+        beaconCache = new BeaconCache(beaconsInfo.getCacheTimes());
+
+        startRanging();
+    }
+
+    private boolean loadBeacons() {
+        try {
+            beaconsInfo = BeaconLoader.load("beacons_info.json");
+        } catch (IOException e) {
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        return true;
+    }
+
+    private void startRanging() {
         beaconSensor.startRanging("", MainActivity.BEACON_UUID, null, null)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -147,13 +173,18 @@ public class MainActivity extends AppCompatActivity {
                         Log.i(TAG, "Found beacons:");
                         List<Base> bases = new ArrayList<>();
                         StringBuffer sb = new StringBuffer();
+                        List<Beacon> cachedBeacons = beaconCache.getBeacons();
+                        Collections.sort(cachedBeacons);
+
                         for (Beacon beacon :
-                                beaconCache.getBeacons()) {
-                            Log.i(TAG, String.format("%s address:%s major=%s minor=%s distance=%f rssi=%d", Thread.currentThread(), beacon.getAddress(), beacon.getMajor(), beacon.getMinor(), beacon.getDistance(), beacon.getRssi()));
-                            sb.append(String.format("address:%s major=%s minor=%s distance=%f rssi=%d\n", beacon.getAddress(), beacon.getMajor(), beacon.getMinor(), beacon.getDistance(), beacon.getRssi()));
+                                cachedBeacons) {
+//                            Log.i(TAG, String.format("%s address:%s major=%s minor=%s distance=%f rssi=%d", Thread.currentThread(), beacon.getAddress(), beacon.getMajor(), beacon.getMinor(), beacon.getDistance(), beacon.getRssi()));
+//                            sb.append(String.format("address:%s distance=%f rssi=%d\n", beacon.getAddress(), beacon.getDistance(), beacon.getRssi()));
 
                             if (beaconLocations.containsKey(beacon.getAddress())) {
-                                bases.add(new Base(beacon.getAddress(), beaconLocations.get(beacon.getAddress()), 0, beacon.getDistance()));
+                                double distance = RSSIToDistance.calc(beacon.getRssi(), beaconsInfo.getMeasurePower(), beaconsInfo.getDecayFactor());
+                                System.out.println(">>>>>>>>>>>!! address: " + beacon.getAddress() + " Rssi: " + beacon.getRssi() + " " + distance);
+                                bases.add(new Base(beacon.getAddress(), beaconLocations.get(beacon.getAddress()), getHeight(beacon), distance));
                             }
                         }
 
@@ -179,5 +210,15 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
+    }
+
+    private double getHeight(Beacon beacon) {
+        for (BeaconLocation beaconLocation : beaconsInfo.getBeaconLocations()) {
+            if (beacon.getAddress().equals(beaconLocation.getAddress())) {
+                return beaconLocation.getHeight();
+            }
+        }
+
+        return 0;
     }
 }

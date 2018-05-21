@@ -26,10 +26,6 @@ public class Trilateral implements Locator {
             return null;
         }
 
-        System.out.println(bases.get(0).getId());
-        System.out.println(bases.get(1).getId());
-        System.out.println(bases.get(2).getId());
-
         try {
             return calculate(uniqueBases);
         } catch (Exception e) {

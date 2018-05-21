@@ -1,8 +1,10 @@
 package com.jmengxy.beacon.models;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
-public class Beacon {
+public class Beacon implements Comparable<Beacon> {
 
     @SerializedName("address")
     private String address;
@@ -16,11 +18,11 @@ public class Beacon {
     @SerializedName("minor")
     private String minor;
 
-    @SerializedName("distance")
-    private double distance;
-
     @SerializedName("rssi")
     private int rssi;
+
+    @SerializedName("height")
+    private double height;
 
     public Beacon() {
     }
@@ -57,19 +59,30 @@ public class Beacon {
         this.minor = minor;
     }
 
-    public double getDistance() {
-        return distance;
-    }
-
-    public void setDistance(double distance) {
-        this.distance = distance;
-    }
-
     public int getRssi() {
         return rssi;
     }
 
     public void setRssi(int rssi) {
         this.rssi = rssi;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
+    }
+
+    @Override
+    public int compareTo(@NonNull Beacon o) {
+        if (getRssi() > o.getRssi()) {
+            return -1;
+        } else if (getRssi() < o.getRssi()) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 }
