@@ -12,6 +12,7 @@ import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.Identifier;
+import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 
@@ -41,6 +42,7 @@ public class BeaconSensor {
     private BeaconConsumer beaconConsumer = new BeaconConsumer() {
         @Override
         public void onBeaconServiceConnect() {
+            beaconManager.addMonitorNotifier(monitorNotifier);
             beaconManager.addRangeNotifier(rangeNotifier);
         }
 
@@ -61,6 +63,7 @@ public class BeaconSensor {
     };
 
     private RangeNotifier rangeNotifier = (beacons, region) -> {
+        System.out.println(">>>>> " + beacons.size());
         PublishSubject<List<com.jmengxy.beacon.models.Beacon>> listPublishSubject = rangeNotifySubjects.get(region);
         if (listPublishSubject == null) {
             return;
@@ -68,20 +71,35 @@ public class BeaconSensor {
 
         if (beacons != null) {
             List<com.jmengxy.beacon.models.Beacon> list = new ArrayList<>();
+
             for (Beacon beacon : beacons) {
                 com.jmengxy.beacon.models.Beacon b = new com.jmengxy.beacon.models.Beacon();
                 b.setAddress(beacon.getBluetoothAddress());
                 b.setUuid(beacon.getId1().toString());
                 b.setMajor(beacon.getId2().toString());
                 b.setMinor(beacon.getId3().toString());
-                b.setDistance(beacon.getDistance());
                 b.setRssi(beacon.getRssi());
+                b.setDistance(beacon.getDistance());
 
                 list.add(b);
             }
             listPublishSubject.onNext(list);
         } else {
             listPublishSubject.onNext(new ArrayList<>());
+        }
+    };
+
+    private MonitorNotifier monitorNotifier = new MonitorNotifier() {
+        @Override
+        public void didEnterRegion(Region region) {
+        }
+
+        @Override
+        public void didExitRegion(Region region) {
+        }
+
+        @Override
+        public void didDetermineStateForRegion(int i, Region region) {
         }
     };
 
@@ -104,6 +122,7 @@ public class BeaconSensor {
             rangeNotifySubjects.put(region, listPublishSubject);
 
             try {
+                beaconManager.startMonitoringBeaconsInRegion(region);
                 beaconManager.startRangingBeaconsInRegion(region);
             } catch (RemoteException e) {
                 Log.e(TAG, e.toString());

@@ -52,7 +52,7 @@ public class Base implements Comparable<Base>, Serializable {
     }
 
     public double getFlatDistance() {
-        return Math.sqrt(Math.pow(distance, 2) - Math.pow(height, 2));
+        return distance > height ? Math.sqrt(Math.pow(distance, 2) - Math.pow(height, 2)) : 0;
     }
 
     @Override

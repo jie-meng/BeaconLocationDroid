@@ -10,7 +10,6 @@ public class BeaconLocation {
 
     private int y;
 
-
     public BeaconLocation() {
     }
 

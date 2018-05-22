@@ -21,6 +21,9 @@ public class Beacon implements Comparable<Beacon> {
     @SerializedName("rssi")
     private int rssi;
 
+    @SerializedName("distance")
+    private double distance;
+
     @SerializedName("height")
     private double height;
 
@@ -57,6 +60,14 @@ public class Beacon implements Comparable<Beacon> {
 
     public void setMinor(String minor) {
         this.minor = minor;
+    }
+
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
 
     public int getRssi() {

@@ -20,7 +20,6 @@ import com.jmengxy.beacon.models.Beacon;
 import com.jmengxy.beaconlocationdroid.models.BeaconLocation;
 import com.jmengxy.beaconlocationdroid.models.BeaconsInfo;
 import com.jmengxy.location.Locator;
-import com.jmengxy.location.algorithms.RSSIToDistance;
 import com.jmengxy.location.algorithms.Trilateral;
 import com.jmengxy.location.models.Base;
 import com.jmengxy.location.models.Location;
@@ -43,6 +42,9 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
+    @BindView(R.id.info)
+    TextView tvInfo;
+
     @BindView(R.id.coordinate)
     TextView tvCoordinate;
 
@@ -54,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 100;
     private static final String BEACON_UUID = "E4B8ADE5-BBBA-E4B8-89E5-B18000000001";
-    private static final int BEACON_CACHE_TIMES = 5;
 
     private Map<String, Location> beaconLocations = new HashMap<>();
 
@@ -136,6 +137,16 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        StringBuffer sb = new StringBuffer();
+        sb.append("beaconUuid: " + beaconsInfo.getBeaconUuid() + "\n");
+        sb.append("beaconLayout: " + beaconsInfo.getBeaconLayout() + "\n");
+        sb.append("cacheTimes: " + beaconsInfo.getCacheTimes() + "\n");
+        sb.append("weight: " + beaconsInfo.getWeight() + "\n");
+        sb.append("measurePower: " + beaconsInfo.getMeasurePower() + "\n");
+        sb.append("decayFactor: " + beaconsInfo.getDecayFactor() + "\n");
+        sb.append("beacons count: " + beaconsInfo.getBeaconLocations().size() + "\n");
+        tvInfo.setText(sb.toString());
+
         initBeaconLocations();
 
         beaconSensor = new BeaconSensor(this);
@@ -170,33 +181,44 @@ public class MainActivity extends AppCompatActivity {
                     public void onNext(List<Beacon> beacons) {
                         beaconCache.update(beacons);
 
-                        Log.i(TAG, "Found beacons:");
                         List<Base> bases = new ArrayList<>();
                         StringBuffer sb = new StringBuffer();
                         List<Beacon> cachedBeacons = beaconCache.getBeacons();
                         Collections.sort(cachedBeacons);
 
-                        for (Beacon beacon :
-                                cachedBeacons) {
-//                            Log.i(TAG, String.format("%s address:%s major=%s minor=%s distance=%f rssi=%d", Thread.currentThread(), beacon.getAddress(), beacon.getMajor(), beacon.getMinor(), beacon.getDistance(), beacon.getRssi()));
-//                            sb.append(String.format("address:%s distance=%f rssi=%d\n", beacon.getAddress(), beacon.getDistance(), beacon.getRssi()));
-
+                        int i = 0;
+                        for (Beacon beacon : cachedBeacons) {
                             if (beaconLocations.containsKey(beacon.getAddress())) {
-                                double distance = RSSIToDistance.calc(beacon.getRssi(), beaconsInfo.getMeasurePower(), beaconsInfo.getDecayFactor());
-                                System.out.println(">>>>>>>>>>>!! address: " + beacon.getAddress() + " Rssi: " + beacon.getRssi() + " " + distance);
-                                bases.add(new Base(beacon.getAddress(), beaconLocations.get(beacon.getAddress()), getHeight(beacon), distance));
+                                bases.add(new Base(beacon.getAddress(), beaconLocations.get(beacon.getAddress()), getHeight(beacon), beacon.getDistance()));
+                                BeaconLocation beaconLocation = getBeaconLocation(beacon.getAddress());
+
+                                sb.append(String.format("%d) %s(%d, %d) dist=%f rssi=%d\n",
+                                        ++i,
+                                        beacon.getAddress(),
+                                        beaconLocation != null ? beaconLocation.getX() : -1,
+                                        beaconLocation != null ? beaconLocation.getY() : -1,
+                                        beacon.getDistance(),
+                                        beacon.getRssi()));
                             }
                         }
 
                         tvBeacons.setText(sb.toString());
 
-                        Location location = locator.getLocation(bases);
-                        if (location != null) {
-                            Log.i(TAG, String.format(">>> Current location: (%f, %f)", location.getxAxis(), location.getyAxis()));
-                            tvCoordinate.setText(String.format("Current location: (%f, %f)", location.getxAxis(), location.getyAxis()));
-                        } else {
-                            Log.i(TAG, "Current location: NULL");
+                        if (bases.isEmpty()) {
                             tvCoordinate.setText("Current location: NULL");
+                        } else if (bases.size() == 1) {
+                            tvCoordinate.setText(String.format("Current location: (%f, %f)", bases.get(0).getLocation().getxAxis(), bases.get(0).getLocation().getyAxis()));
+                        } else if (bases.size() == 2) {
+                            tvCoordinate.setText(String.format("Current location: (%f, %f)",
+                                    (bases.get(0).getLocation().getxAxis() + bases.get(1).getLocation().getxAxis()) / 2,
+                                    (bases.get(0).getLocation().getyAxis() + bases.get(1).getLocation().getyAxis()) / 2));
+                        } else {
+                            Location location = locator.getLocation(bases);
+                            if (location != null) {
+                                tvCoordinate.setText(String.format("Current location: (%f, %f)", location.getxAxis(), location.getyAxis()));
+                            } else {
+                                tvCoordinate.setText("Current location: NULL");
+                            }
                         }
                     }
 
@@ -220,5 +242,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return 0;
+    }
+
+    private BeaconLocation getBeaconLocation(String address) {
+        for (BeaconLocation beaconLocation : beaconsInfo.getBeaconLocations()) {
+            if (beaconLocation.getAddress().equals(address)) {
+                return beaconLocation;
+            }
+        }
+
+        return null;
     }
 }
