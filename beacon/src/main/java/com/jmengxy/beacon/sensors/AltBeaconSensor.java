@@ -1,4 +1,4 @@
-package com.jmengxy.beacon;
+package com.jmengxy.beacon.sensors;
 
 import android.content.Context;
 import android.content.Intent;
@@ -17,16 +17,18 @@ import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.reactivex.Observable;
+import io.reactivex.functions.Action;
 import io.reactivex.subjects.PublishSubject;
 
-public class BeaconSensor {
+class AltBeaconSensor implements BeaconSensor {
 
-    private static final String TAG = "BeaconSensor";
+    private static final String TAG = "AltBeaconSensor";
 
     private Context context;
 
@@ -34,7 +36,7 @@ public class BeaconSensor {
 
     private Map<Region, PublishSubject<List<com.jmengxy.beacon.models.Beacon>>> rangeNotifySubjects = new HashMap<>();
 
-    public BeaconSensor(@NonNull Context context) {
+    public AltBeaconSensor(@NonNull Context context) {
         this.context = context;
         beaconManager = BeaconManager.getInstanceForApplication(context);
     }
@@ -62,30 +64,34 @@ public class BeaconSensor {
         }
     };
 
-    private RangeNotifier rangeNotifier = (beacons, region) -> {
-        System.out.println(">>>>> " + beacons.size());
-        PublishSubject<List<com.jmengxy.beacon.models.Beacon>> listPublishSubject = rangeNotifySubjects.get(region);
-        if (listPublishSubject == null) {
-            return;
-        }
+    private RangeNotifier rangeNotifier = new RangeNotifier() {
+        @Override
+        public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+            Log.d(TAG, "Found beacons: " + beacons.size());
 
-        if (beacons != null) {
-            List<com.jmengxy.beacon.models.Beacon> list = new ArrayList<>();
-
-            for (Beacon beacon : beacons) {
-                com.jmengxy.beacon.models.Beacon b = new com.jmengxy.beacon.models.Beacon();
-                b.setAddress(beacon.getBluetoothAddress());
-                b.setUuid(beacon.getId1().toString());
-                b.setMajor(beacon.getId2().toString());
-                b.setMinor(beacon.getId3().toString());
-                b.setRssi(beacon.getRssi());
-                b.setDistance(beacon.getDistance());
-
-                list.add(b);
+            PublishSubject<List<com.jmengxy.beacon.models.Beacon>> listPublishSubject = rangeNotifySubjects.get(region);
+            if (listPublishSubject == null) {
+                return;
             }
-            listPublishSubject.onNext(list);
-        } else {
-            listPublishSubject.onNext(new ArrayList<>());
+
+            if (beacons != null) {
+                List<com.jmengxy.beacon.models.Beacon> list = new ArrayList<>();
+
+                for (Beacon beacon : beacons) {
+                    com.jmengxy.beacon.models.Beacon b = new com.jmengxy.beacon.models.Beacon();
+                    b.setAddress(beacon.getBluetoothAddress());
+                    b.setUuid(beacon.getId1().toString());
+                    b.setMajor(beacon.getId2().toString());
+                    b.setMinor(beacon.getId3().toString());
+                    b.setRssi(beacon.getRssi());
+                    b.setDistance(beacon.getDistance());
+
+                    list.add(b);
+                }
+                listPublishSubject.onNext(list);
+            } else {
+                listPublishSubject.onNext(new ArrayList<com.jmengxy.beacon.models.Beacon>());
+            }
         }
     };
 
@@ -103,6 +109,7 @@ public class BeaconSensor {
         }
     };
 
+    @Override
     public void bind(@NonNull List<String> beaconLayouts) {
         for (String beaconLayout : beaconLayouts) {
             beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(beaconLayout));
@@ -110,12 +117,14 @@ public class BeaconSensor {
         beaconManager.bind(beaconConsumer);
     }
 
+    @Override
     public void unbind() {
         beaconManager.unbind(beaconConsumer);
     }
 
-    public Observable<List<com.jmengxy.beacon.models.Beacon>> startRanging(@NonNull String regionId, @NonNull String beaconUuid, String major, String minor) {
-        Region region = createRegion(regionId, beaconUuid, major, minor);
+    @Override
+    public Observable<List<com.jmengxy.beacon.models.Beacon>> startRanging(@NonNull final String regionId, @NonNull final String beaconUuid, final String major, final String minor) {
+        final Region region = createRegion(regionId, beaconUuid, major, minor);
         PublishSubject<List<com.jmengxy.beacon.models.Beacon>> listPublishSubject = rangeNotifySubjects.get(region);
         if (listPublishSubject == null) {
             listPublishSubject = PublishSubject.create();
@@ -129,9 +138,12 @@ public class BeaconSensor {
                 return Observable.error(e);
             }
 
-            return listPublishSubject.doOnDispose(() -> {
-                stopRanging(regionId, beaconUuid, major, minor);
-                rangeNotifySubjects.remove(region);
+            return listPublishSubject.doOnDispose(new Action() {
+                @Override
+                public void run() throws Exception {
+                    stopRanging(regionId, beaconUuid, major, minor);
+                    rangeNotifySubjects.remove(region);
+                }
             });
         } else {
             return listPublishSubject;

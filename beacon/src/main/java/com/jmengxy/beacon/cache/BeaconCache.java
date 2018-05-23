@@ -1,4 +1,4 @@
-package com.jmengxy.beacon;
+package com.jmengxy.beacon.cache;
 
 import com.jmengxy.beacon.models.Beacon;
 

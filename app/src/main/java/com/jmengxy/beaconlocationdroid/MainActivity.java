@@ -14,8 +14,9 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.jmengxy.beacon.BeaconCache;
-import com.jmengxy.beacon.BeaconSensor;
+import com.jmengxy.beacon.sensors.BeaconSensor;
+import com.jmengxy.beacon.cache.BeaconCache;
+import com.jmengxy.beacon.sensors.BeaconSensorFactory;
 import com.jmengxy.beacon.models.Beacon;
 import com.jmengxy.beaconlocationdroid.models.BeaconLocation;
 import com.jmengxy.beaconlocationdroid.models.BeaconsInfo;
@@ -144,12 +145,13 @@ public class MainActivity extends AppCompatActivity {
         sb.append("weight: " + beaconsInfo.getWeight() + "\n");
         sb.append("measurePower: " + beaconsInfo.getMeasurePower() + "\n");
         sb.append("decayFactor: " + beaconsInfo.getDecayFactor() + "\n");
+        sb.append("sensorType: " + beaconsInfo.getSensorType() + "\n");
         sb.append("beacons count: " + beaconsInfo.getBeaconLocations().size() + "\n");
         tvInfo.setText(sb.toString());
 
         initBeaconLocations();
 
-        beaconSensor = new BeaconSensor(this);
+        beaconSensor = BeaconSensorFactory.create(this, beaconsInfo.getSensorType());
         beaconSensor.bind(Arrays.asList(beaconsInfo.getBeaconLayout()));
         beaconCache = new BeaconCache(beaconsInfo.getCacheTimes());
 
@@ -168,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startRanging() {
-        beaconSensor.startRanging("", MainActivity.BEACON_UUID, null, null)
+        beaconSensor.startRanging("rid_all", MainActivity.BEACON_UUID, null, null)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<List<Beacon>>() {

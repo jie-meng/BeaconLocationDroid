@@ -16,6 +16,8 @@ public class BeaconsInfo {
 
     private double decayFactor;
 
+    private int sensorType;
+
     private List<BeaconLocation> beaconLocations;
 
     public BeaconsInfo() {
@@ -67,6 +69,14 @@ public class BeaconsInfo {
 
     public void setDecayFactor(double decayFactor) {
         this.decayFactor = decayFactor;
+    }
+
+    public int getSensorType() {
+        return sensorType;
+    }
+
+    public void setSensorType(int sensorType) {
+        this.sensorType = sensorType;
     }
 
     public List<BeaconLocation> getBeaconLocations() {
