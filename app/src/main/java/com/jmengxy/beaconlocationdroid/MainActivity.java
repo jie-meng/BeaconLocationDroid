@@ -221,7 +221,9 @@ public class MainActivity extends AppCompatActivity {
                             if (location != null) {
                                 tvCoordinate.setText(String.format("Current location: (%f, %f)", location.getxAxis(), location.getyAxis()));
                             } else {
-                                tvCoordinate.setText("Current location: NULL");
+                                tvCoordinate.setText(String.format("Current location: (%f, %f)",
+                                        (bases.get(0).getLocation().getxAxis() + bases.get(1).getLocation().getxAxis() + bases.get(2).getLocation().getxAxis()) / 3,
+                                        (bases.get(0).getLocation().getyAxis() + bases.get(1).getLocation().getyAxis() + bases.get(2).getLocation().getyAxis()) / 3));
                             }
                         }
                     }
