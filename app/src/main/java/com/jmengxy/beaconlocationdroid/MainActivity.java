@@ -21,6 +21,7 @@ import com.jmengxy.beacon.models.Beacon;
 import com.jmengxy.beaconlocationdroid.models.BeaconLocation;
 import com.jmengxy.beaconlocationdroid.models.BeaconsInfo;
 import com.jmengxy.location.Locator;
+import com.jmengxy.location.algorithms.RSSIToDistance;
 import com.jmengxy.location.algorithms.Trilateral;
 import com.jmengxy.location.models.Base;
 import com.jmengxy.location.models.Location;
@@ -191,7 +192,8 @@ public class MainActivity extends AppCompatActivity {
                         int i = 0;
                         for (Beacon beacon : cachedBeacons) {
                             if (beaconLocations.containsKey(beacon.getAddress())) {
-                                bases.add(new Base(beacon.getAddress(), beaconLocations.get(beacon.getAddress()), getHeight(beacon), beacon.getDistance()));
+                                double distance = RSSIToDistance.calc(beacon.getRssi(), beaconsInfo.getMeasurePower(), 2.0);
+                                bases.add(new Base(beacon.getAddress(), beaconLocations.get(beacon.getAddress()), getHeight(beacon), distance));
                                 BeaconLocation beaconLocation = getBeaconLocation(beacon.getAddress());
 
                                 sb.append(String.format("%d) %s(%d, %d) dist=%f rssi=%d\n",
@@ -199,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
                                         beacon.getAddress(),
                                         beaconLocation != null ? beaconLocation.getX() : -1,
                                         beaconLocation != null ? beaconLocation.getY() : -1,
-                                        beacon.getDistance(),
+                                        distance,
                                         beacon.getRssi()));
                             }
                         }
