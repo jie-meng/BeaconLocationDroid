@@ -1,6 +1,7 @@
 package com.jmengxy.beaconlocationdroid;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -8,16 +9,18 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.jmengxy.beacon.sensors.BeaconSensor;
+import com.google.gson.Gson;
 import com.jmengxy.beacon.cache.BeaconCache;
-import com.jmengxy.beacon.sensors.BeaconSensorFactory;
 import com.jmengxy.beacon.models.Beacon;
+import com.jmengxy.beacon.sensors.BeaconSensor;
+import com.jmengxy.beacon.sensors.BeaconSensorFactory;
 import com.jmengxy.beaconlocationdroid.models.BeaconLocation;
 import com.jmengxy.beaconlocationdroid.models.BeaconsInfo;
 import com.jmengxy.location.Locator;
@@ -36,6 +39,7 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -43,6 +47,10 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
+
+    private Gson gson = new Gson();
+
+    private LocalBroadcastManager localBroadcastManager;
 
     @BindView(R.id.info)
     TextView tvInfo;
@@ -52,6 +60,12 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.beacons)
     TextView tvBeacons;
+
+    @OnClick(R.id.radar)
+    void clickRadar() {
+        Intent intent = new Intent(this, RadarActivity.class);
+        startActivity(intent);
+    }
 
     private BeaconsInfo beaconsInfo;
 
@@ -108,6 +122,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
+
         checkPermissions();
     }
 
@@ -208,24 +224,38 @@ public class MainActivity extends AppCompatActivity {
 
                         tvBeacons.setText(sb.toString());
 
+                        Location location = new Location();
+
                         if (bases.isEmpty()) {
                             tvCoordinate.setText("Current location: NULL");
+                            location = null;
                         } else if (bases.size() == 1) {
-                            tvCoordinate.setText(String.format("Current location: (%f, %f)", bases.get(0).getLocation().getxAxis(), bases.get(0).getLocation().getyAxis()));
+                            location.setxAxis(bases.get(0).getLocation().getxAxis());
+                            location.setyAxis(bases.get(0).getLocation().getyAxis());
                         } else if (bases.size() == 2) {
-                            tvCoordinate.setText(String.format("Current location: (%f, %f)",
-                                    (bases.get(0).getLocation().getxAxis() + bases.get(1).getLocation().getxAxis()) / 2,
-                                    (bases.get(0).getLocation().getyAxis() + bases.get(1).getLocation().getyAxis()) / 2));
+                            location.setxAxis((bases.get(0).getLocation().getxAxis() + bases.get(1).getLocation().getxAxis()) / 2);
+                            location.setyAxis((bases.get(0).getLocation().getyAxis() + bases.get(1).getLocation().getyAxis()) / 2);
                         } else {
-                            Location location = locator.getLocation(bases);
+                            Location calcLocation = locator.getLocation(bases);
                             if (location != null) {
-                                tvCoordinate.setText(String.format("Current location: (%f, %f)", location.getxAxis(), location.getyAxis()));
+                                location = calcLocation;
                             } else {
-                                tvCoordinate.setText(String.format("Current location: (%f, %f)",
-                                        (bases.get(0).getLocation().getxAxis() + bases.get(1).getLocation().getxAxis() + bases.get(2).getLocation().getxAxis()) / 3,
-                                        (bases.get(0).getLocation().getyAxis() + bases.get(1).getLocation().getyAxis() + bases.get(2).getLocation().getyAxis()) / 3));
+                                location.setxAxis((bases.get(0).getLocation().getxAxis() + bases.get(1).getLocation().getxAxis() + bases.get(2).getLocation().getxAxis()) / 3);
+                                location.setyAxis((bases.get(0).getLocation().getyAxis() + bases.get(1).getLocation().getyAxis() + bases.get(2).getLocation().getyAxis()) / 3);
                             }
                         }
+
+                        tvCoordinate.setText(location == null
+                                ? "Current location: NULL"
+                                : String.format("Current location: (%f, %f)",
+                                location.getxAxis(), location.getyAxis()));
+
+                        Intent intent = new Intent();
+                        intent.setAction(BroadcastConstants.BROADCAST_LOCATION);
+                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_LOCATION, location);
+                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_WEIGHT, beaconsInfo.getWeight());
+                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_BASES, gson.toJson(bases));
+                        localBroadcastManager.sendBroadcast(intent);
                     }
 
                     @Override
