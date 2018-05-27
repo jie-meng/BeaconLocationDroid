@@ -1,4 +1,4 @@
-package com.jmengxy.beaconlocationdroid;
+package com.jmengxy.beaconlocationdroid.managers;
 
 import android.os.Environment;
 
@@ -8,13 +8,18 @@ import com.jmengxy.beaconlocationdroid.utils.FileUtils;
 
 import java.io.IOException;
 
-public class BeaconLoader {
+public class BeaconsInfoManager {
 
     private static Gson gson = new Gson();
 
-    public static BeaconsInfo load(String sdcardPath) throws IOException {
+    public static BeaconsInfo read(String sdcardPath) throws IOException {
         String filePath = Environment.getExternalStorageDirectory() + "/" + sdcardPath;
         BeaconsInfo beaconsInfo = gson.fromJson(FileUtils.readTextFile(filePath), BeaconsInfo.class);
         return beaconsInfo;
+    }
+
+    public static void write(String sdcardPath, BeaconsInfo beaconsInfo) throws IOException {
+        String filePath = Environment.getExternalStorageDirectory() + "/" + sdcardPath;
+        FileUtils.writeTextFile(filePath, gson.toJson(beaconsInfo));
     }
 }

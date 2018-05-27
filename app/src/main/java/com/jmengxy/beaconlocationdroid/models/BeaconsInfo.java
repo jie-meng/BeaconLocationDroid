@@ -10,7 +10,9 @@ public class BeaconsInfo {
 
     private int cacheTimes;
 
-    private double weight;
+    private double distanceWeight;
+
+    private double height;
 
     private int measurePower;
 
@@ -47,12 +49,20 @@ public class BeaconsInfo {
         this.cacheTimes = cacheTimes;
     }
 
-    public double getWeight() {
-        return weight;
+    public double getDistanceWeight() {
+        return distanceWeight;
     }
 
-    public void setWeight(double weight) {
-        this.weight = weight;
+    public void setDistanceWeight(double distanceWeight) {
+        this.distanceWeight = distanceWeight;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
     }
 
     public int getMeasurePower() {

@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">BeaconLocationDroid</string>
+    <string name="beacon_location">Beacon location</string>
+    <string name="radar">Radar</string>
+    <string name="settings">settings</string>
+    <string name="measure_power">Measure power</string>
+    <string name="ok">ok</string>
+    <string name="distance_weight">Distance weight</string>
+    <string name="incorrect_format">Incorrect format</string>
+    <string name="height">Height</string>
+    <string name="settings_cap">Settings</string>
 </resources>

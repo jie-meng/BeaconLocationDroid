@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="60dp">
+        <LinearLayout
+            android:layout_marginTop="?attr/actionBarSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:orientation="vertical">
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/til_distance_weight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:hint="@string/distance_weight"
+                android:theme="@style/AppThemeBase.TextInputLayout.Light"
+                app:errorTextAppearance="@style/AppThemeBase.TextInputLayout.ErrorMessage">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/ed_distance_weight"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="textVisiblePassword|number"
+                    android:maxLength="10"
+                    android:maxLines="1"
+                    android:textColor="@color/black"
+                    android:textSize="16dp" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/til_height"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:hint="@string/height"
+                android:theme="@style/AppThemeBase.TextInputLayout.Light"
+                app:errorTextAppearance="@style/AppThemeBase.TextInputLayout.ErrorMessage">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/ed_height"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="textVisiblePassword|number"
+                    android:maxLength="10"
+                    android:maxLines="1"
+                    android:textColor="@color/black"
+                    android:textSize="16dp" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/til_measure_power"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:hint="@string/measure_power"
+                android:theme="@style/AppThemeBase.TextInputLayout.Light"
+                app:errorTextAppearance="@style/AppThemeBase.TextInputLayout.ErrorMessage">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/ed_measure_power"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="textVisiblePassword|number"
+                    android:maxLength="10"
+                    android:maxLines="1"
+                    android:textColor="@color/black"
+                    android:textSize="16dp" />
+            </android.support.design.widget.TextInputLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:layout_alignParentTop="true"
+            android:background="@color/colorPrimary"
+            app:navigationIcon="@drawable/ic_arrow_back_white_24dp"
+            app:title="@string/settings_cap"
+            app:titleTextColor="@android:color/white" />
+    </android.support.design.widget.AppBarLayout>
+
+    <Button
+        android:id="@+id/ok"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom"
+        android:background="@color/colorPrimary"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:text="@string/ok"
+        android:textSize="16sp"
+        android:textColor="@color/white" />
+
+</FrameLayout>

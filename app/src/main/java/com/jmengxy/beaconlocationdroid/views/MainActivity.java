@@ -1,4 +1,4 @@
-package com.jmengxy.beaconlocationdroid;
+package com.jmengxy.beaconlocationdroid.views;
 
 import android.Manifest;
 import android.content.Intent;
@@ -10,9 +10,14 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,11 +26,14 @@ import com.jmengxy.beacon.cache.BeaconCache;
 import com.jmengxy.beacon.models.Beacon;
 import com.jmengxy.beacon.sensors.BeaconSensor;
 import com.jmengxy.beacon.sensors.BeaconSensorFactory;
+import com.jmengxy.beaconlocationdroid.R;
+import com.jmengxy.beaconlocationdroid.definitions.BroadcastConstants;
+import com.jmengxy.beaconlocationdroid.managers.AlgorithmManager;
+import com.jmengxy.beaconlocationdroid.managers.BeaconsInfoManager;
 import com.jmengxy.beaconlocationdroid.models.BeaconLocation;
 import com.jmengxy.beaconlocationdroid.models.BeaconsInfo;
-import com.jmengxy.location.Locator;
+import com.jmengxy.beaconlocationdroid.models.CalcResult;
 import com.jmengxy.location.algorithms.RSSIToDistance;
-import com.jmengxy.location.algorithms.Trilateral;
 import com.jmengxy.location.models.Base;
 import com.jmengxy.location.models.Location;
 
@@ -48,9 +56,19 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Gson gson = new Gson();
+    public static final String ARG_BEACON_INFO = "ARG_BEACON_INFO";
 
-    private LocalBroadcastManager localBroadcastManager;
+    private static final String TAG = "MainActivity";
+    private static final int REQUEST_CODE_SETTINGS = 500;
+    private static final String BEACONS_INFO_FILE = "beacons_info.json";
+
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 100;
+    private static final String BEACON_UUID = "E4B8ADE5-BBBA-E4B8-89E5-B18000000001";
+    // Detect iBeacons ( http://stackoverflow.com/questions/25027983/is-this-the-correct-layout-to-detect-ibea    cons-with-altbeacons-android-beacon-li )
+    private static final String IBEACON_LAYOUT = "m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24";
+
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
 
     @BindView(R.id.info)
     TextView tvInfo;
@@ -68,26 +86,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private BeaconsInfo beaconsInfo;
+    private LocalBroadcastManager localBroadcastManager;
 
-    private static final String TAG = "MainActivity";
-    private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 100;
-    private static final String BEACON_UUID = "E4B8ADE5-BBBA-E4B8-89E5-B18000000001";
-
+    private Gson gson = new Gson();
     private Map<String, Location> beaconLocations = new HashMap<>();
-
-    // Detect iBeacons ( http://stackoverflow.com/questions/25027983/is-this-the-correct-layout-to-detect-ibea    cons-with-altbeacons-android-beacon-li )
-    private static final String IBEACON_LAYOUT = "m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24";
 
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
     private BeaconSensor beaconSensor = null;
     private BeaconCache beaconCache = null;
-    private Locator locator = new Trilateral();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        setSupportActionBar(toolbar);
         init();
     }
 
@@ -121,9 +134,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_settings) {
+            startSettingsActivity();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void startSettingsActivity() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        intent.putExtra(ARG_BEACON_INFO, gson.toJson(beaconsInfo));
+        startActivityForResult(intent, REQUEST_CODE_SETTINGS);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_SETTINGS) {
+            String stringExtra = data.getStringExtra(ARG_BEACON_INFO);
+            beaconsInfo = gson.fromJson(stringExtra, BeaconsInfo.class);
+            showSettings();
+            try {
+                BeaconsInfoManager.write(BEACONS_INFO_FILE, beaconsInfo);
+            } catch (IOException e) {
+                Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private void init() {
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
-
         checkPermissions();
     }
 
@@ -131,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         for (BeaconLocation beaconLocation : beaconsInfo.getBeaconLocations()) {
             beaconLocations.put(
                     beaconLocation.getAddress(),
-                    new Location(beaconLocation.getX() * beaconsInfo.getWeight(), beaconLocation.getY() * beaconsInfo.getWeight()));
+                    new Location(beaconLocation.getX() * beaconsInfo.getDistanceWeight(), beaconLocation.getY() * beaconsInfo.getDistanceWeight()));
         }
     }
 
@@ -140,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.READ_EXTERNAL_STORAGE},
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
             } else {
                 initBluetooth();
@@ -155,17 +204,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        StringBuffer sb = new StringBuffer();
-        sb.append("beaconUuid: " + beaconsInfo.getBeaconUuid() + "\n");
-        sb.append("beaconLayout: " + beaconsInfo.getBeaconLayout() + "\n");
-        sb.append("cacheTimes: " + beaconsInfo.getCacheTimes() + "\n");
-        sb.append("weight: " + beaconsInfo.getWeight() + "\n");
-        sb.append("measurePower: " + beaconsInfo.getMeasurePower() + "\n");
-        sb.append("decayFactor: " + beaconsInfo.getDecayFactor() + "\n");
-        sb.append("sensorType: " + beaconsInfo.getSensorType() + "\n");
-        sb.append("beacons count: " + beaconsInfo.getBeaconLocations().size() + "\n");
-        tvInfo.setText(sb.toString());
-
+        showSettings();
         initBeaconLocations();
 
         beaconSensor = BeaconSensorFactory.create(this, beaconsInfo.getSensorType());
@@ -175,9 +214,23 @@ public class MainActivity extends AppCompatActivity {
         startRanging();
     }
 
+    private void showSettings() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("beaconUuid: " + beaconsInfo.getBeaconUuid() + "\n");
+        sb.append("beaconLayout: " + beaconsInfo.getBeaconLayout() + "\n");
+        sb.append("cacheTimes: " + beaconsInfo.getCacheTimes() + "\n");
+        sb.append("distance weight: " + beaconsInfo.getDistanceWeight() + "\n");
+        sb.append("height: " + beaconsInfo.getHeight() + "\n");
+        sb.append("measurePower: " + beaconsInfo.getMeasurePower() + "\n");
+        sb.append("decayFactor: " + beaconsInfo.getDecayFactor() + "\n");
+        sb.append("sensorType: " + beaconsInfo.getSensorType() + "\n");
+        sb.append("beacons count: " + beaconsInfo.getBeaconLocations().size() + "\n");
+        tvInfo.setText(sb.toString());
+    }
+
     private boolean loadBeacons() {
         try {
-            beaconsInfo = BeaconLoader.load("beacons_info.json");
+            beaconsInfo = BeaconsInfoManager.read(BEACONS_INFO_FILE);
         } catch (IOException e) {
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
             return false;
@@ -208,8 +261,8 @@ public class MainActivity extends AppCompatActivity {
                         int i = 0;
                         for (Beacon beacon : cachedBeacons) {
                             if (beaconLocations.containsKey(beacon.getAddress())) {
-                                double distance = RSSIToDistance.calc(beacon.getRssi(), beaconsInfo.getMeasurePower(), 2.0);
-                                bases.add(new Base(beacon.getAddress(), beaconLocations.get(beacon.getAddress()), getHeight(beacon), distance));
+                                double distance = RSSIToDistance.calc(beacon.getRssi(), beaconsInfo.getMeasurePower(), beaconsInfo.getDecayFactor());
+                                bases.add(new Base(beacon.getAddress(), beaconLocations.get(beacon.getAddress()), beaconsInfo.getHeight(), distance));
                                 BeaconLocation beaconLocation = getBeaconLocation(beacon.getAddress());
 
                                 sb.append(String.format("%d) %s(%d, %d) dist=%f rssi=%d\n",
@@ -224,37 +277,19 @@ public class MainActivity extends AppCompatActivity {
 
                         tvBeacons.setText(sb.toString());
 
-                        Location location = new Location();
+                        CalcResult result = AlgorithmManager.calc(bases, beaconsInfo.getDistanceWeight());
 
-                        if (bases.isEmpty()) {
-                            tvCoordinate.setText("Current location: NULL");
-                            location = null;
-                        } else if (bases.size() == 1) {
-                            location.setxAxis(bases.get(0).getLocation().getxAxis());
-                            location.setyAxis(bases.get(0).getLocation().getyAxis());
-                        } else if (bases.size() == 2) {
-                            location.setxAxis((bases.get(0).getLocation().getxAxis() + bases.get(1).getLocation().getxAxis()) / 2);
-                            location.setyAxis((bases.get(0).getLocation().getyAxis() + bases.get(1).getLocation().getyAxis()) / 2);
-                        } else {
-                            Location calcLocation = locator.getLocation(bases);
-                            if (location != null) {
-                                location = calcLocation;
-                            } else {
-                                location.setxAxis((bases.get(0).getLocation().getxAxis() + bases.get(1).getLocation().getxAxis() + bases.get(2).getLocation().getxAxis()) / 3);
-                                location.setyAxis((bases.get(0).getLocation().getyAxis() + bases.get(1).getLocation().getyAxis() + bases.get(2).getLocation().getyAxis()) / 3);
-                            }
-                        }
-
-                        tvCoordinate.setText(location == null
+                        tvCoordinate.setText(result.getLocation() == null
                                 ? "Current location: NULL"
                                 : String.format("Current location: (%f, %f)",
-                                location.getxAxis(), location.getyAxis()));
+                                result.getLocation().getxAxis(), result.getLocation().getyAxis()));
 
                         Intent intent = new Intent();
                         intent.setAction(BroadcastConstants.BROADCAST_LOCATION);
-                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_LOCATION, location);
-                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_WEIGHT, beaconsInfo.getWeight());
-                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_BASES, gson.toJson(bases));
+                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_LOCATION, result.getLocation());
+                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_WEIGHT, beaconsInfo.getDistanceWeight());
+                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_BASES, gson.toJson(result.getBases()));
+                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_CALC_RESULT, gson.toJson(result));
                         localBroadcastManager.sendBroadcast(intent);
                     }
 
@@ -265,19 +300,8 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onComplete() {
-
                     }
                 });
-    }
-
-    private double getHeight(Beacon beacon) {
-        for (BeaconLocation beaconLocation : beaconsInfo.getBeaconLocations()) {
-            if (beacon.getAddress().equals(beaconLocation.getAddress())) {
-                return beaconLocation.getHeight();
-            }
-        }
-
-        return 0;
     }
 
     private BeaconLocation getBeaconLocation(String address) {

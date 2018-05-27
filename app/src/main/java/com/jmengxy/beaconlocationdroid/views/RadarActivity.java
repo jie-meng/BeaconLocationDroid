@@ -1,4 +1,4 @@
-package com.jmengxy.beaconlocationdroid;
+package com.jmengxy.beaconlocationdroid.views;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -16,15 +16,22 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.jmengxy.beaconlocationdroid.R;
+import com.jmengxy.beaconlocationdroid.definitions.BroadcastConstants;
+import com.jmengxy.beaconlocationdroid.models.CalcResult;
 import com.jmengxy.location.models.Base;
 import com.jmengxy.location.models.Location;
 import com.jmengxy.utillib.utils.DisplayUtils;
+
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.List;
 
@@ -39,15 +46,23 @@ public class RadarActivity extends AppCompatActivity {
 
     private Gson gson = new Gson();
 
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+
     @BindView(R.id.radar_image)
     ImageView imageView;
 
     @BindView(R.id.coordinate)
     TextView tvCoordinate;
 
+    @BindView(R.id.info)
+    TextView tvInfo;
+
     private Canvas canvas;
 
     private Bitmap bitmap;
+
+    private CalcResult calcResult;
 
     private Paint paintAxisThick;
 
@@ -66,6 +81,7 @@ public class RadarActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radar);
         ButterKnife.bind(this);
+        setSupportActionBar(toolbar);
         init();
     }
 
@@ -73,6 +89,17 @@ public class RadarActivity extends AppCompatActivity {
     protected void onDestroy() {
         localBroadcastManager.unregisterReceiver(broadcastReceiver);
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void init() {
@@ -88,24 +115,28 @@ public class RadarActivity extends AppCompatActivity {
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Location location = (Location) intent.getSerializableExtra(BroadcastConstants.BROADCAST_KEY_LOCATION);
                 double weight = intent.getDoubleExtra(BroadcastConstants.BROADCAST_KEY_WEIGHT, DEFAULT_WEIGHT);
-                List<Base> baseList = gson.fromJson(intent.getStringExtra(BroadcastConstants.BROADCAST_KEY_BASES), new TypeToken<List<Base>>() {
-                }.getType());
+                calcResult = gson.fromJson(intent.getStringExtra(BroadcastConstants.BROADCAST_KEY_CALC_RESULT), CalcResult.class);
 
-                if (baseList.size() > 3) {
-                    baseList = baseList.subList(0, 3);
-                }
+                draw(calcResult.getLocation(), calcResult.getBases(), weight);
 
-                draw(location, baseList, weight);
-
-                tvCoordinate.setText(location == null
+                tvCoordinate.setText(calcResult.getLocation() == null
                         ? "Current location: NULL"
                         : String.format("Current location: (%f, %f)",
-                        location.getxAxis(), location.getyAxis()));
+                        calcResult.getLocation().getxAxis(), calcResult.getLocation().getyAxis()));
+
+                showInfo();
             }
         };
         localBroadcastManager.registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    private void showInfo() {
+        StringBuffer sb = new StringBuffer();
+        sb.append(String.format("Reliability: %.2f\n", calcResult.getReliablility()));
+        sb.append("Calculate by " + (calcResult.isAverageCalc() ? "Average\n" : "Trilateral\n"));
+
+        tvInfo.setText(sb.toString());
     }
 
     private float convertDpToPixel(float dp) {
@@ -129,9 +160,9 @@ public class RadarActivity extends AppCompatActivity {
         paintText.setTextSize(DisplayUtils.convertSpToPixel(this, 8));
 
         paintCircle = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paintCircle.setColor(Color.CYAN);
+        paintCircle.setColor(Color.GREEN);
         paintCircle.setStyle(Paint.Style.STROKE);
-        paintCircle.setStrokeWidth(convertDpToPixel(3));
+        paintCircle.setStrokeWidth(convertDpToPixel(2));
     }
 
     private void draw(Location location, List<Base> bases, double weight) {

@@ -1,8 +1,10 @@
 package com.jmengxy.beaconlocationdroid.utils;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class FileUtils {
 
@@ -18,5 +20,11 @@ public class FileUtils {
         }
 
         return sb.toString();
+    }
+
+    public static void writeTextFile(String filePath, String text) throws FileNotFoundException {
+        try (PrintWriter out = new PrintWriter(filePath)) {
+            out.println(text);
+        }
     }
 }

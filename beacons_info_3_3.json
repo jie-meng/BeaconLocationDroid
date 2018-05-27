@@ -2,7 +2,8 @@
     "beaconUuid": "E4B8ADE5-BBBA-E4B8-89E5-B18000000001",
     "beaconLayout": "m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24",
     "cacheTimes": 5,
-    "weight": 1,
+    "distanceWeight": 1.0,
+    "height": 0.1,
     "measurePower": -70,
     "decayFactor": 2.0,
     "sensorType": 0,
@@ -10,55 +11,46 @@
         [
             {
                 "address": "19:18:FC:06:01:1D",
-                "height": 0.1,
                 "x": 0,
                 "y": 0
             },
             {
                 "address": "19:18:FC:06:01:22",
-                "height": 0.1,
                 "x": 0,
                 "y": 1
             },
             {
                 "address": "19:18:FC:06:01:29",
-                "height": 0.1,
                 "x": 0,
                 "y": 2
             },
             {
                 "address": "19:18:FC:06:01:2A",
-                "height": 0.1,
                 "x": 1,
                 "y": 0
             },
             {
                 "address": "19:18:FC:06:01:21",
-                "height": 0.1,
                 "x": 1,
                 "y": 1
             },
             {
                 "address": "19:18:FC:06:01:27",
-                "height": 0.1,
                 "x": 1,
                 "y": 2
             },
             {
                 "address": "19:18:FC:06:01:31",
-                "height": 0.1,
                 "x": 2,
                 "y": 0
             },
             {
                 "address": "19:18:FC:06:01:23",
-                "height": 0.1,
                 "x": 2,
                 "y": 1
             },
             {
                 "address": "19:18:FC:06:01:25",
-                "height": 0.1,
                 "x": 2,
                 "y": 2
             }
