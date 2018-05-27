@@ -30,9 +30,6 @@ import com.jmengxy.location.models.Base;
 import com.jmengxy.location.models.Location;
 import com.jmengxy.utillib.utils.DisplayUtils;
 
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
 import java.util.List;
 
 import butterknife.BindView;
