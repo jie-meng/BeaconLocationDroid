@@ -17,15 +17,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppThemeBase">
-        <activity android:name=".views.MainActivity" android:screenOrientation="portrait">
+        <activity android:name=".views.MainActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".views.RadarActivity" android:screenOrientation="portrait"/>
-        <activity android:name=".views.SettingsActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".views.RadarActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize"/>
+        <activity android:name=".views.SettingsActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize"/>
     </application>
 
 </manifest>

@@ -8,9 +8,9 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
         android:layout_marginBottom="60dp">
         <LinearLayout
-            android:layout_marginTop="?attr/actionBarSize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
@@ -81,16 +81,37 @@
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
-                android:id="@+id/til_algorithm"
+                android:id="@+id/til_location_beacon_count"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:hint="@string/algorithm"
+                android:hint="@string/location_beacon_count"
                 android:theme="@style/AppThemeBase.TextInputLayout.Light"
                 app:errorTextAppearance="@style/AppThemeBase.TextInputLayout.ErrorMessage">
 
                 <android.support.design.widget.TextInputEditText
-                    android:id="@+id/ed_algorithm"
+                    android:id="@+id/ed_location_beacon_count"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="textVisiblePassword|number"
+                    android:maxLength="10"
+                    android:maxLines="1"
+                    android:textColor="@color/black"
+                    android:textSize="16dp" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/til_reliable_threshold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:hint="@string/reliable_threshold"
+                android:theme="@style/AppThemeBase.TextInputLayout.Light"
+                app:errorTextAppearance="@style/AppThemeBase.TextInputLayout.ErrorMessage">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/ed_reliable_threshold"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:imeOptions="actionNext"

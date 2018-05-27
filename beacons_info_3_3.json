@@ -7,6 +7,8 @@
     "measurePower": -70,
     "decayFactor": 2.0,
     "sensorType": 0,
+    "locationBeaconCount": 6,
+    "reliableThreshold": 0.5,
     "beaconLocations":
         [
             {

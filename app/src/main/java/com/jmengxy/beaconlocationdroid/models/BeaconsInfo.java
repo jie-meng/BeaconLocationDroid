@@ -20,7 +20,9 @@ public class BeaconsInfo {
 
     private int sensorType;
 
-    private int algorithm;
+    private int locationBeaconCount;
+
+    private double reliableThreshold;
 
     private List<BeaconLocation> beaconLocations;
 
@@ -91,12 +93,20 @@ public class BeaconsInfo {
         this.sensorType = sensorType;
     }
 
-    public int getAlgorithm() {
-        return algorithm;
+    public int getLocationBeaconCount() {
+        return locationBeaconCount;
     }
 
-    public void setAlgorithm(int algorithm) {
-        this.algorithm = algorithm;
+    public void setLocationBeaconCount(int locationBeaconCount) {
+        this.locationBeaconCount = locationBeaconCount;
+    }
+
+    public double getReliableThreshold() {
+        return reliableThreshold;
+    }
+
+    public void setReliableThreshold(double reliableThreshold) {
+        this.reliableThreshold = reliableThreshold;
     }
 
     public List<BeaconLocation> getBeaconLocations() {

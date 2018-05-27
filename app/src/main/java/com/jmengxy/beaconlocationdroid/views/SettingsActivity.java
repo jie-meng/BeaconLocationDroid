@@ -12,7 +12,6 @@ import android.widget.EditText;
 import com.google.gson.Gson;
 import com.jmengxy.beaconlocationdroid.R;
 import com.jmengxy.beaconlocationdroid.models.BeaconsInfo;
-import com.jmengxy.beaconlocationdroid.views.MainActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -46,12 +45,17 @@ public class SettingsActivity extends AppCompatActivity {
     @BindView(R.id.ed_measure_power)
     EditText edMeasurePower;
 
-    @BindView(R.id.til_algorithm)
-    TextInputLayout tilAlgorithm;
+    @BindView(R.id.til_location_beacon_count)
+    TextInputLayout tiLocationBeaconCount;
 
-    @BindView(R.id.ed_algorithm)
-    EditText edAlgorithm;
+    @BindView(R.id.ed_location_beacon_count)
+    EditText edLocationBeaconCount;
 
+    @BindView(R.id.til_reliable_threshold)
+    TextInputLayout tilReliableThreshold;
+
+    @BindView(R.id.ed_reliable_threshold)
+    EditText edReliableThreshold;
 
     @OnClick(R.id.ok)
     void clickOk() {
@@ -89,10 +93,18 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         try {
-            beaconsInfo.setAlgorithm(Integer.parseInt(edAlgorithm.getText().toString()));
+            beaconsInfo.setLocationBeaconCount(Integer.parseInt(edLocationBeaconCount.getText().toString()));
         } catch (NumberFormatException e) {
-            tilAlgorithm.setErrorEnabled(true);
-            tilAlgorithm.setError(getString(R.string.incorrect_format));
+            tiLocationBeaconCount.setErrorEnabled(true);
+            tiLocationBeaconCount.setError(getString(R.string.incorrect_format));
+            return false;
+        }
+
+        try {
+            beaconsInfo.setReliableThreshold(Double.parseDouble(edReliableThreshold.getText().toString()));
+        } catch (NumberFormatException e) {
+            tilReliableThreshold.setErrorEnabled(true);
+            tilReliableThreshold.setError(getString(R.string.incorrect_format));
             return false;
         }
 
@@ -124,12 +136,10 @@ public class SettingsActivity extends AppCompatActivity {
         beaconsInfo = gson.fromJson(stringExtra, BeaconsInfo.class);
 
         edDistanceWeight.setOnClickListener(v -> tilDistanceWeight.setErrorEnabled(false));
-
         edHeight.setOnClickListener(v -> tilHeight.setErrorEnabled(false));
-
         edMeasurePower.setOnClickListener(v -> tilMeasurePower.setErrorEnabled(false));
-
-        edAlgorithm.setOnClickListener(v -> tilAlgorithm.setErrorEnabled(false));
+        edLocationBeaconCount.setOnClickListener(v -> tiLocationBeaconCount.setErrorEnabled(false));
+        edReliableThreshold.setOnClickListener(v -> tilReliableThreshold.setErrorEnabled(false));
 
         edDistanceWeight.setText(Double.toString(beaconsInfo.getDistanceWeight()));
         edDistanceWeight.setSelection(edDistanceWeight.getText().length());
@@ -140,7 +150,10 @@ public class SettingsActivity extends AppCompatActivity {
         edMeasurePower.setText(Integer.toString(this.beaconsInfo.getMeasurePower()));
         edMeasurePower.setSelection(edMeasurePower.getText().length());
 
-        edAlgorithm.setText(Integer.toString(this.beaconsInfo.getAlgorithm()));
-        edAlgorithm.setSelection(edAlgorithm.getText().length());
+        edLocationBeaconCount.setText(Integer.toString(this.beaconsInfo.getLocationBeaconCount()));
+        edLocationBeaconCount.setSelection(edLocationBeaconCount.getText().length());
+
+        edReliableThreshold.setText(Double.toString(beaconsInfo.getReliableThreshold()));
+        edReliableThreshold.setSelection(edReliableThreshold.getText().length());
     }
 }

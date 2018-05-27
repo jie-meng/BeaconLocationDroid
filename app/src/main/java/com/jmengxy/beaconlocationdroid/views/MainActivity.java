@@ -10,7 +10,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -226,7 +225,8 @@ public class MainActivity extends AppCompatActivity {
         sb.append("measurePower: " + beaconsInfo.getMeasurePower() + "\n");
         sb.append("decayFactor: " + beaconsInfo.getDecayFactor() + "\n");
         sb.append("sensorType: " + beaconsInfo.getSensorType() + "\n");
-        sb.append("algorithm: " + beaconsInfo.getAlgorithm() + "\n");
+        sb.append("locationBeaconCount: " + beaconsInfo.getLocationBeaconCount() + "\n");
+        sb.append("reliableThreshold: " + beaconsInfo.getReliableThreshold() + "\n");
         sb.append("beacons count: " + beaconsInfo.getBeaconLocations().size() + "\n");
         tvInfo.setText(sb.toString());
     }
@@ -280,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
 
                         tvBeacons.setText(sb.toString());
 
-                        CalcResult result = AlgorithmManager.calc(bases, beaconsInfo.getAlgorithm(), beaconsInfo.getDistanceWeight());
+                        CalcResult result = AlgorithmManager.calc(bases, beaconsInfo.getLocationBeaconCount(), beaconsInfo.getReliableThreshold(), beaconsInfo.getDistanceWeight());
 
                         tvCoordinate.setText(result.getLocation() == null
                                 ? "Current location: NULL"
@@ -289,9 +289,7 @@ public class MainActivity extends AppCompatActivity {
 
                         Intent intent = new Intent();
                         intent.setAction(BroadcastConstants.BROADCAST_LOCATION);
-                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_LOCATION, result.getLocation());
                         intent.putExtra(BroadcastConstants.BROADCAST_KEY_WEIGHT, beaconsInfo.getDistanceWeight());
-                        intent.putExtra(BroadcastConstants.BROADCAST_KEY_BASES, gson.toJson(result.getBases()));
                         intent.putExtra(BroadcastConstants.BROADCAST_KEY_CALC_RESULT, gson.toJson(result));
                         localBroadcastManager.sendBroadcast(intent);
                     }

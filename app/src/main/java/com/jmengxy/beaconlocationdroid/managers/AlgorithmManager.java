@@ -15,7 +15,7 @@ public class AlgorithmManager {
 
     private static Locator locator = new Trilateral();
 
-    public static CalcResult calc(List<Base> bases, int algorithm, double distanceWeight) {
+    public static CalcResult calc(List<Base> bases, int locationBeaconCount, double reliableThreshold, double distanceWeight) {
         if (bases.isEmpty()) {
             return new CalcResult(null, bases, true, -1);
         } else if (bases.size() == 1) {
@@ -23,17 +23,17 @@ public class AlgorithmManager {
         } else if (bases.size() == 2) {
             return new CalcResult(calcAverageLocation(bases), bases, true, -1);
         } else {
-            bases = selectNearestBeacons(algorithm, bases);
+            bases = selectNearestBeacons(locationBeaconCount, bases);
             List<List<Base>> combines = combination(bases, 3);
 
-            double mostReliableValue = 1000;
+            double mostReliableValue = 0;
             Location mostReliableLocation = null;
             List<Base> mostReliableBases = null;
             for (int i = 0; i < combines.size(); i++) {
                 Location calcLocation = locator.getLocation(combines.get(i));
                 if (calcLocation != null) {
                     double reliability = calcReliability(combines.get(i), calcLocation);
-                    if (mostReliableValue > reliability) {
+                    if (mostReliableValue < reliability) {
                         mostReliableValue = reliability;
                         mostReliableLocation = calcLocation;
                         mostReliableBases = combines.get(i);
@@ -41,9 +41,9 @@ public class AlgorithmManager {
                 }
             }
 
-            return mostReliableLocation != null && mostReliableBases != null && mostReliableValue < distanceWeight ?
+            return mostReliableLocation != null && mostReliableBases != null && mostReliableValue > reliableThreshold ?
                     new CalcResult(mostReliableLocation, mostReliableBases, false, mostReliableValue) :
-                    new CalcResult(calcAverageLocation(bases.subList(0, 3)), bases.subList(0, 3), true, -1);
+                    new CalcResult(calcAverageLocation(bases.subList(0, 3)), bases.subList(0, 3), true, mostReliableValue);
         }
     }
 
@@ -68,8 +68,8 @@ public class AlgorithmManager {
     }
 
     @NonNull
-    private static List<Base> selectNearestBeacons(int algorithm, List<Base> bases) {
-        int selectMaximum = algorithm == 1 ? 6 : 3;
+    private static List<Base> selectNearestBeacons(int selectionBeaconCount, List<Base> bases) {
+        int selectMaximum = selectionBeaconCount;
         if (bases.size() < selectMaximum) {
             selectMaximum = bases.size();
         }
@@ -79,10 +79,12 @@ public class AlgorithmManager {
     private static double calcReliability(List<Base> bases, Location location) {
         double total = 0;
         for (Base base : bases) {
-            total += distanceOf(location, base.getLocation());
+            double baseRssiDistance = base.getFlatDistance();
+            double resultToBaseDistance = distanceOf(location, base.getLocation());
+            total += Math.abs((resultToBaseDistance - baseRssiDistance) / (resultToBaseDistance + baseRssiDistance));
         }
 
-        return total / bases.size();
+        return 1 - total / bases.size();
     }
 
     private static double distanceOf(Location a, Location b) {

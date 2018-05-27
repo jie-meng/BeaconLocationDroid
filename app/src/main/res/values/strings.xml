@@ -10,4 +10,6 @@
     <string name="height">Height</string>
     <string name="settings_cap">Settings</string>
     <string name="algorithm">Algorithm</string>
+    <string name="location_beacon_count">Location beacon count</string>
+    <string name="reliable_threshold">Reliable threshold</string>
 </resources>
