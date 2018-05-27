@@ -46,6 +46,12 @@ public class SettingsActivity extends AppCompatActivity {
     @BindView(R.id.ed_measure_power)
     EditText edMeasurePower;
 
+    @BindView(R.id.til_algorithm)
+    TextInputLayout tilAlgorithm;
+
+    @BindView(R.id.ed_algorithm)
+    EditText edAlgorithm;
+
 
     @OnClick(R.id.ok)
     void clickOk() {
@@ -82,6 +88,14 @@ public class SettingsActivity extends AppCompatActivity {
             return false;
         }
 
+        try {
+            beaconsInfo.setAlgorithm(Integer.parseInt(edAlgorithm.getText().toString()));
+        } catch (NumberFormatException e) {
+            tilAlgorithm.setErrorEnabled(true);
+            tilAlgorithm.setError(getString(R.string.incorrect_format));
+            return false;
+        }
+
         return true;
     }
 
@@ -109,17 +123,13 @@ public class SettingsActivity extends AppCompatActivity {
         String stringExtra = getIntent().getStringExtra(MainActivity.ARG_BEACON_INFO);
         beaconsInfo = gson.fromJson(stringExtra, BeaconsInfo.class);
 
-        edDistanceWeight.setOnClickListener(v -> {
-            tilDistanceWeight.setErrorEnabled(false);
-        });
+        edDistanceWeight.setOnClickListener(v -> tilDistanceWeight.setErrorEnabled(false));
 
-        edHeight.setOnClickListener(v -> {
-            tilHeight.setErrorEnabled(false);
-        });
+        edHeight.setOnClickListener(v -> tilHeight.setErrorEnabled(false));
 
-        edMeasurePower.setOnClickListener(v -> {
-            tilMeasurePower.setErrorEnabled(false);
-        });
+        edMeasurePower.setOnClickListener(v -> tilMeasurePower.setErrorEnabled(false));
+
+        edAlgorithm.setOnClickListener(v -> tilAlgorithm.setErrorEnabled(false));
 
         edDistanceWeight.setText(Double.toString(beaconsInfo.getDistanceWeight()));
         edDistanceWeight.setSelection(edDistanceWeight.getText().length());
@@ -129,5 +139,8 @@ public class SettingsActivity extends AppCompatActivity {
 
         edMeasurePower.setText(Integer.toString(this.beaconsInfo.getMeasurePower()));
         edMeasurePower.setSelection(edMeasurePower.getText().length());
+
+        edAlgorithm.setText(Integer.toString(this.beaconsInfo.getAlgorithm()));
+        edAlgorithm.setSelection(edAlgorithm.getText().length());
     }
 }

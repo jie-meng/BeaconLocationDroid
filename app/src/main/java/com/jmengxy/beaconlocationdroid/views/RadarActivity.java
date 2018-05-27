@@ -179,17 +179,18 @@ public class RadarActivity extends AppCompatActivity {
 
         for (Base base : bases) {
             Bitmap bitmap = drawableToBitmap(ContextCompat.getDrawable(this, R.drawable.ic_lens_orange_24dp));
-            canvas.drawCircle(
-                    convertDpToPixel(locationToCoordinate(base.getLocation().getxAxis(), weight)),
-                    convertDpToPixel(IMAGE_WIDTH - locationToCoordinate(base.getLocation().getyAxis(), weight)),
-                    convertDpToPixel(locationToCoordinate(base.getFlatDistance(), weight)),
-                    paintCircle);
 
             canvas.drawBitmap(
                     bitmap,
                     convertDpToPixel(locationToCoordinate(base.getLocation().getxAxis(), weight) - 12),
                     convertDpToPixel(IMAGE_WIDTH - locationToCoordinate(base.getLocation().getyAxis(), weight) - 12),
                     paintAxisThin);
+
+            canvas.drawCircle(
+                    convertDpToPixel(locationToCoordinate(base.getLocation().getxAxis(), weight)),
+                    convertDpToPixel(IMAGE_WIDTH - locationToCoordinate(base.getLocation().getyAxis(), weight)),
+                    convertDpToPixel(locationToCoordinate(base.getFlatDistance(), weight)),
+                    paintCircle);
         }
     }
 

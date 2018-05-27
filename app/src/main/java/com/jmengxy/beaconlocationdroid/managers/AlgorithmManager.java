@@ -15,7 +15,7 @@ public class AlgorithmManager {
 
     private static Locator locator = new Trilateral();
 
-    public static CalcResult calc(List<Base> bases, double distanceWeight) {
+    public static CalcResult calc(List<Base> bases, int algorithm, double distanceWeight) {
         if (bases.isEmpty()) {
             return new CalcResult(null, bases, true, -1);
         } else if (bases.size() == 1) {
@@ -23,7 +23,7 @@ public class AlgorithmManager {
         } else if (bases.size() == 2) {
             return new CalcResult(calcAverageLocation(bases), bases, true, -1);
         } else {
-            bases = selectNearestBeacons(bases);
+            bases = selectNearestBeacons(algorithm, bases);
             List<List<Base>> combines = combination(bases, 3);
 
             double mostReliableValue = 1000;
@@ -68,8 +68,8 @@ public class AlgorithmManager {
     }
 
     @NonNull
-    private static List<Base> selectNearestBeacons(List<Base> bases) {
-        int selectMaximum = 6;
+    private static List<Base> selectNearestBeacons(int algorithm, List<Base> bases) {
+        int selectMaximum = algorithm == 1 ? 6 : 3;
         if (bases.size() < selectMaximum) {
             selectMaximum = bases.size();
         }

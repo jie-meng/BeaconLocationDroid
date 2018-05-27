@@ -20,6 +20,8 @@ public class BeaconsInfo {
 
     private int sensorType;
 
+    private int algorithm;
+
     private List<BeaconLocation> beaconLocations;
 
     public BeaconsInfo() {
@@ -87,6 +89,14 @@ public class BeaconsInfo {
 
     public void setSensorType(int sensorType) {
         this.sensorType = sensorType;
+    }
+
+    public int getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(int algorithm) {
+        this.algorithm = algorithm;
     }
 
     public List<BeaconLocation> getBeaconLocations() {

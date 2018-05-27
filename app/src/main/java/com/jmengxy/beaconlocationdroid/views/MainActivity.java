@@ -226,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
         sb.append("measurePower: " + beaconsInfo.getMeasurePower() + "\n");
         sb.append("decayFactor: " + beaconsInfo.getDecayFactor() + "\n");
         sb.append("sensorType: " + beaconsInfo.getSensorType() + "\n");
+        sb.append("algorithm: " + beaconsInfo.getAlgorithm() + "\n");
         sb.append("beacons count: " + beaconsInfo.getBeaconLocations().size() + "\n");
         tvInfo.setText(sb.toString());
     }
@@ -279,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
 
                         tvBeacons.setText(sb.toString());
 
-                        CalcResult result = AlgorithmManager.calc(bases, beaconsInfo.getDistanceWeight());
+                        CalcResult result = AlgorithmManager.calc(bases, beaconsInfo.getAlgorithm(), beaconsInfo.getDistanceWeight());
 
                         tvCoordinate.setText(result.getLocation() == null
                                 ? "Current location: NULL"
