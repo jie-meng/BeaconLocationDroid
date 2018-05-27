@@ -162,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_SETTINGS) {
             String stringExtra = data.getStringExtra(ARG_BEACON_INFO);
             beaconsInfo = gson.fromJson(stringExtra, BeaconsInfo.class);
+            initBeaconLocations();
             showSettings();
             try {
                 BeaconsInfoManager.write(BEACONS_INFO_FILE, beaconsInfo);
@@ -177,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initBeaconLocations() {
+        beaconLocations.clear();
         for (BeaconLocation beaconLocation : beaconsInfo.getBeaconLocations()) {
             beaconLocations.put(
                     beaconLocation.getAddress(),
