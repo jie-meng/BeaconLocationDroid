@@ -59,8 +59,6 @@ public class RadarActivity extends AppCompatActivity {
 
     private Bitmap bitmap;
 
-    private CalcResult calcResult;
-
     private Paint paintAxisThick;
 
     private Paint paintAxisThin;
@@ -113,7 +111,7 @@ public class RadarActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 double weight = intent.getDoubleExtra(BroadcastConstants.BROADCAST_KEY_WEIGHT, DEFAULT_WEIGHT);
-                calcResult = gson.fromJson(intent.getStringExtra(BroadcastConstants.BROADCAST_KEY_CALC_RESULT), CalcResult.class);
+                CalcResult calcResult = gson.fromJson(intent.getStringExtra(BroadcastConstants.BROADCAST_KEY_CALC_RESULT), CalcResult.class);
 
                 draw(calcResult.getLocation(), calcResult.getBases(), weight);
 
@@ -122,13 +120,13 @@ public class RadarActivity extends AppCompatActivity {
                         : String.format("Current location: (%f, %f)",
                         calcResult.getLocation().getxAxis(), calcResult.getLocation().getyAxis()));
 
-                showInfo();
+                showInfo(calcResult);
             }
         };
         localBroadcastManager.registerReceiver(broadcastReceiver, intentFilter);
     }
 
-    private void showInfo() {
+    private void showInfo(CalcResult calcResult) {
         StringBuffer sb = new StringBuffer();
         sb.append(String.format("Reliability: %.2f\n", calcResult.getReliablility()));
         sb.append("Calculate by " + (calcResult.isAverageCalc() ? "Average\n" : "Trilateral\n"));
@@ -139,8 +137,7 @@ public class RadarActivity extends AppCompatActivity {
     private float convertDpToPixel(float dp) {
         Resources resources = this.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();
-        float px = dp * ((float) metrics.densityDpi / 160.0F);
-        return px;
+        return dp * ((float) metrics.densityDpi / 160.0F);
     }
 
     private void initPaints() {

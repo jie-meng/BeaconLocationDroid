@@ -25,6 +25,6 @@ public class AlgorithmTest {
     }
 
     private double rssiToDistance(int rssi) {
-        return RSSIToDistance.calc(rssi, -60, 2.0);
+        return RSSIToDistance.calc(rssi, -50, 2.0);
     }
 }
